@@ -56,9 +56,14 @@ public class MessageListener {
             Customer customer = customerRecord.value();
             System.out.println("Start message");
             writeMessage("We got this customer: " + customer);
-            System.out.println(customer.getCustomerID() + " " + customer.getCustomerName());
+            System.out.println(customer.getId() + " " + customer.getName());
             System.out.println("End message");
         }
+    }
+
+    @KafkaListener(topics = "customerContacts")
+    public void bookStaticWithAvroSchemasListener(String msg) {
+        writeMessage(msg);
     }
 
     private void writeMessage(String msg) {

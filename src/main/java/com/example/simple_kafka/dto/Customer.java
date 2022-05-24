@@ -8,14 +8,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Customer {
-    private int customerID;
-    private String customerName;
+    private int id;
+    private String name;
 
     @Override
     public String toString() {
         return "Customer{" +
-                "customerID=" + customerID +
-                ", customerName='" + customerName + '\'' +
+                "customerID=" + id +
+                ", customerName='" + name + '\'' +
                 '}';
     }
 }
