@@ -1,0 +1,9 @@
+{"namespace": "com.example.simple_kafka.dto",
+ "type": "record",
+ "name": "Message",
+ "fields": [
+     {"name": "code"    , "type": "string"},
+     {"name": "priority", "type": ["int"   , "null"]},
+     {"name": "extra"   , "type": ["string", "null"]}
+ ]
+}
