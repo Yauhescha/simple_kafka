@@ -20,6 +20,7 @@ import java.util.Map;
 @Configuration
 public class MessageListener {
     private KafkaConsumer<String, Customer> kafkaConsumer;
+    private static boolean startedListen = false;
 
     {
         Map<String, Object> props = new HashMap<>();
@@ -51,13 +52,17 @@ public class MessageListener {
 
     @Scheduled(cron = "10 * * * * *")
     public void bookMessageWithCustomSerializer() {
-        ConsumerRecords<String, Customer> records = kafkaConsumer.poll(100);
-        for (ConsumerRecord<String, Customer> customerRecord : records) {
-            Customer customer = customerRecord.value();
-            System.out.println("Start message");
-            writeMessage("We got this customer: " + customer);
-            System.out.println(customer.getId() + " " + customer.getName());
-            System.out.println("End message");
+        if (startedListen) return;
+        startedListen = true;
+        while (true) {
+            ConsumerRecords<String, Customer> records = kafkaConsumer.poll(100);
+            for (ConsumerRecord<String, Customer> customerRecord : records) {
+                Customer customer = customerRecord.value();
+                System.out.println("Start message");
+                writeMessage("We got this customer: " + customer);
+                System.out.println(customer.getId() + " " + customer.getName());
+                System.out.println("End message");
+            }
         }
     }
 
