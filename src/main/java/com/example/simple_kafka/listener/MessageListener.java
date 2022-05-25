@@ -12,15 +12,19 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @EnableKafka
 @Configuration
 public class MessageListener {
     private KafkaConsumer<String, Customer> kafkaConsumer;
-    private static boolean startedListen = false;
+    private static boolean startedSimpleListen = false;
+    private static boolean startedAvroListen = false;
 
     {
         Map<String, Object> props = new HashMap<>();
@@ -52,8 +56,8 @@ public class MessageListener {
 
     @Scheduled(cron = "10 * * * * *")
     public void bookMessageWithCustomSerializer() {
-        if (startedListen) return;
-        startedListen = true;
+        if (startedSimpleListen) return;
+        startedSimpleListen = true;
         while (true) {
             ConsumerRecords<String, Customer> records = kafkaConsumer.poll(100);
             for (ConsumerRecord<String, Customer> customerRecord : records) {
@@ -66,9 +70,29 @@ public class MessageListener {
         }
     }
 
-    @KafkaListener(topics = "customerContacts")
-    public void bookStaticWithAvroSchemasListener(String msg) {
-        writeMessage(msg);
+    @Scheduled(cron = "15 * * * * *")
+    public void bookStaticWithAvroSchemasListener() {
+        if (startedAvroListen) return;
+        startedAvroListen = true;
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "mygroup");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+
+        try (KafkaConsumer consumer = new KafkaConsumer<>(props)) {
+            consumer.subscribe(Arrays.asList("customerContacts"));
+
+            while (true) {
+                ConsumerRecords records = consumer.poll(100);
+                Iterator<ConsumerRecord> iterator = records.iterator();
+                while (iterator.hasNext()){
+                    System.out.println(iterator.next().value());
+                }
+            }
+        }
     }
 
     private void writeMessage(String msg) {

@@ -1,13 +1,10 @@
 package com.example.simple_kafka.controller;
 
+import com.example.simple_kafka.dto.Message;
 import io.swagger.annotations.ApiOperation;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
 import com.example.simple_kafka.dto.Customer;
 import com.example.simple_kafka.serializator.CustomerSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,27 +55,16 @@ public class BookController {
     public void postStaticMessageWithAvroSerializer(){
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
-        props.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
         props.put("schema.registry.url", "http://localhost:8081");
-        String schemaString = "{\"namespace\": \"customerManagement.avro\","+
-                                "\"type\": \"record\", " +
-                                "\"name\": \"Customer\"," +
-                                "\"fields\": [" +
-                                    "{\"name\": \"id\", \"type\": \"int\"}," +
-                                    "{\"name\": \"name\", \"type\": \"string\"}" +
-                                "]}";
-        Producer<String, GenericRecord> producer = new KafkaProducer<>(props);
-        Schema.Parser parser = new Schema.Parser();
-        Schema schema = parser.parse(schemaString);
-        for (int nCustomers = 0; nCustomers < 5; nCustomers++) {
-            String name = "exampleCustomer" + nCustomers;
-            String email = "example " + nCustomers + "@example.com";
-            GenericRecord customer = new GenericData.Record(schema);
-            customer.put("id", nCustomers);
-            customer.put("name", email);
-            ProducerRecord<String, GenericRecord> data = new ProducerRecord<>("customerContacts", name, customer);
-            producer.send(data);
+
+
+        try (KafkaProducer producer = new KafkaProducer<>(props)) {
+            for (int i = 0; i < 5; i++) {
+                ProducerRecord record = new ProducerRecord<>("testopic", new Message("Message-" + i, 1, "extra"));
+                producer.send(record);
+            }
         }
     }
 }
