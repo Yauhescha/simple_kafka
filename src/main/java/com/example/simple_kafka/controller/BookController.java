@@ -46,13 +46,13 @@ public class BookController {
 
         KafkaProducer<String, Customer> producer = new KafkaProducer<>(kafkaProps);
 
-        ProducerRecord<String, Customer> record = new ProducerRecord<>("customerDTO", customer.getId()+"", customer);
+        ProducerRecord<String, Customer> record = new ProducerRecord<>("customerDTO", customer.getId() + "", customer);
         producer.send(record);
     }
 
     @PostMapping("/messageStaticAvro")
     @ApiOperation(value = "Trying to send message with avro chemas. Withoout 'schema.registry.urr' on 'http://localhost:8081' will be thrown exception")
-    public void postStaticMessageWithAvroSerializer(){
+    public void postStaticMessageWithAvroSerializer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -60,9 +60,9 @@ public class BookController {
         props.put("schema.registry.url", "http://localhost:8081");
 
 
-        try (KafkaProducer producer = new KafkaProducer<>(props)) {
+        try (KafkaProducer<String, Message> producer = new KafkaProducer<>(props)) {
             for (int i = 0; i < 5; i++) {
-                ProducerRecord record = new ProducerRecord<>("testopic", new Message("Message-" + i, 1, "extra"));
+                ProducerRecord<String, Message> record = new ProducerRecord<>("testopic", new Message("Message-" + i, i, "extra"));
                 producer.send(record);
             }
         }

@@ -1,6 +1,7 @@
 package com.example.simple_kafka.listener;
 
 import com.example.simple_kafka.dto.Customer;
+import com.example.simple_kafka.dto.Message;
 import com.example.simple_kafka.serializator.CustomerDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,7 +13,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +47,7 @@ public class MessageListener {
     @KafkaListener(topics = "CustomerCountry")
     public void bookStaticListener(String msg) {
         writeMessage(msg);
+        bookStaticWithAvroSchemasListener();
     }
 
     @KafkaListener(topics = "justTopic")
@@ -70,7 +71,7 @@ public class MessageListener {
         }
     }
 
-    @Scheduled(cron = "15 * * * * *")
+    @Scheduled(cron = "15,45 * * * * *")
     public void bookStaticWithAvroSchemasListener() {
         if (startedAvroListen) return;
         startedAvroListen = true;
@@ -82,14 +83,16 @@ public class MessageListener {
         props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
         props.put("schema.registry.url", "http://localhost:8081");
 
-        try (KafkaConsumer consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(Arrays.asList("customerContacts"));
+        try (KafkaConsumer<String, Message> consumer = new KafkaConsumer<>(props)) {
+            consumer.subscribe(List.of("testopic"));
 
             while (true) {
                 ConsumerRecords records = consumer.poll(100);
                 Iterator<ConsumerRecord> iterator = records.iterator();
-                while (iterator.hasNext()){
+                while (iterator.hasNext()) {
+                    System.out.println("We got message!");
                     System.out.println(iterator.next().value());
+                    System.out.println("End message/");
                 }
             }
         }
