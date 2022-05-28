@@ -64,7 +64,6 @@ public class MessageListener {
             for (ConsumerRecord<String, Customer> customerRecord : records) {
                 Customer customer = customerRecord.value();
                 System.out.println("Start message");
-                writeMessage("We got this customer: " + customer);
                 System.out.println(customer.getId() + " " + customer.getName());
                 System.out.println("End message");
             }
