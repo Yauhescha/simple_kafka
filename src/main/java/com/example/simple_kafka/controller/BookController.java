@@ -4,7 +4,11 @@ import com.example.simple_kafka.dto.Message;
 import io.swagger.annotations.ApiOperation;
 import com.example.simple_kafka.dto.Customer;
 import com.example.simple_kafka.serializator.CustomerSerializer;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -91,5 +95,37 @@ public class BookController {
                 producer.send(record);
             }
         }
+    }
+
+    @PostMapping("/messageStaticAvroWithoutGeneratedSchema")
+    public void messageStaticAvroWithoutGeneratedSchema() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+        props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+
+        String schemaString = "{\"namespace\": \"customerManagement.avro\", " +
+                                 "\"type\": \"record\", " +
+                                "\"name\": \"Customer\"," +
+                                "\"fields\": [" +
+                                    "{\"name\": \"id\", \"type\": \"int\"}," +
+                                    "{\"name\": \"name\", \"type\": \"string\"}," +
+                                    "{\"name\": \"email\", \"type\": [\"null\", \"string\"], \"default\":null }" +
+                              "]}";
+        Producer<String, GenericRecord> producer = new KafkaProducer<>(props);
+        Schema.Parser parser = new Schema.Parser();
+        Schema schema = parser.parse(schemaString);
+        for (int nCustomers = 0; nCustomers < 5; nCustomers++) {
+            String name = "exampleCustomer" + nCustomers;
+            String email = "example " + nCustomers + "@example.com";
+            GenericRecord customer = new GenericData.Record(schema);
+            customer.put("id", nCustomers);
+            customer.put("name", name);
+            customer.put("email", email);
+            ProducerRecord<String, GenericRecord> data = new ProducerRecord<>("customerContacts", name, customer);
+            producer.send(data);
+        }
+        producer.close();
     }
 }

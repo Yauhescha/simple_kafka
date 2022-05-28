@@ -70,6 +70,11 @@ public class MessageListener {
         }
     }
 
+    @KafkaListener(topics = "customerContacts")
+    public void bookMessageWithoutGeneratedSchemas(ConsumerRecord<String, String> record) {
+        writeMessage(record.value());
+    }
+
     @Scheduled(cron = "15,45 * * * * *")
     public void bookStaticWithAvroSchemasListener() {
         if (startedAvroListen) return;
