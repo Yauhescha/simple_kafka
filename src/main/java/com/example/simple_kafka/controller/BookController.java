@@ -10,18 +10,26 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Properties;
-import java.util.concurrent.Future;
 
 @RestController
 @RequestMapping("book")
 public class BookController {
+
+    @Value("${bootstrap.servers}")
+    private String kafkaServer;
+    
+    @Value("${schema.registry.url}")
+    private String schemaUrl;
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -29,7 +37,7 @@ public class BookController {
     @PostMapping("/messageStatic")
     void messageStatic() {
         Properties kafkaProps = new Properties();
-        kafkaProps.put("bootstrap.servers", "localhost:9092");
+        kafkaProps.put("bootstrap.servers", kafkaServer);
         kafkaProps.put("key.serializer", StringSerializer.class);
         kafkaProps.put("value.serializer", StringSerializer.class);
 
@@ -47,7 +55,7 @@ public class BookController {
     @PostMapping("/messageDTO")
     void messageDTO(@RequestBody Customer customer) {
         Properties kafkaProps = new Properties();
-        kafkaProps.put("bootstrap.servers", "localhost:9092");
+        kafkaProps.put("bootstrap.servers", kafkaServer);
         kafkaProps.put("key.serializer", StringSerializer.class);
         kafkaProps.put("value.serializer", CustomerSerializer.class);
 
@@ -61,7 +69,7 @@ public class BookController {
     @PostMapping("/messageDTOWithAnswer")
     void messageDTOWithAnswer(@RequestBody Customer customer) {
         Properties kafkaProps = new Properties();
-        kafkaProps.put("bootstrap.servers", "localhost:9092");
+        kafkaProps.put("bootstrap.servers", kafkaServer);
         kafkaProps.put("key.serializer", StringSerializer.class);
         kafkaProps.put("value.serializer", CustomerSerializer.class);
 
@@ -83,10 +91,10 @@ public class BookController {
     @ApiOperation(value = "Trying to send message with avro schemas. Without 'schema.registry.urr' on 'http://localhost:8081' will be thrown exception")
     public void messageStaticAvro() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", kafkaServer);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
-        props.put("schema.registry.url", "http://localhost:8081");
+        props.put("schema.registry.url", schemaUrl);
 
 
         try (KafkaProducer<String, Message> producer = new KafkaProducer<>(props)) {
@@ -100,10 +108,10 @@ public class BookController {
     @PostMapping("/messageStaticAvroWithoutGeneratedSchema")
     public void messageStaticAvroWithoutGeneratedSchema() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", kafkaServer);
         props.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
         props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
-        props.put("schema.registry.url", "http://localhost:8081");
+        props.put("schema.registry.url", schemaUrl);
 
         String schemaString = "{\"namespace\": \"customerManagement.avro\", " +
                                  "\"type\": \"record\", " +

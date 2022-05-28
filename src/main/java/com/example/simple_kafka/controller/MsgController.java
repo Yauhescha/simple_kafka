@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +16,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("msg")
 public class MsgController {
-    private String kafkaServer = "localhost:9092";
+    @Value("${bootstrap.servers}")
+    private String kafkaServer;
 
     @PostMapping
     public void sendOrder(Long msgId, String msg) {
