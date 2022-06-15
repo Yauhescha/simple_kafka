@@ -19,7 +19,7 @@ public class MessageListener {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    @KafkaListener(topics = {"msg", "CustomerCountry", "justTopic"})
+    @KafkaListener(topics = {"msg", "CustomerCountry", "justTopic", "kafka-config-topic"})
     public void msgListener(String msg) {
         writeMessage(msg);
     }
